@@ -7,7 +7,7 @@ public static class ResultExtensions
     // this might have to go into the "naughty" namespace
     // public static bool IsSuccess<T>(this Result<T> result) => 
     //     result is Result<T>.Success;
-    
+
     public static Result<TResult> Select<T, TResult>(this Result<T> result, Func<T, TResult> onSuccess)
     {
         var tryResult = Result.Try(() =>
@@ -46,25 +46,37 @@ public static class ResultExtensions
 
     public static async Task<Result<TResult>> Select<T, TResult>(this Result<T> result, Func<T, Task<TResult>> onSuccess)
     {
-        return result switch
+        var tryResult = await Result.Try(async () =>
         {
-            Result<T>.Success success => Result.Success(await onSuccess(success.Value)),
-            Result<T>.Failure failure => Result.Failure<TResult>(failure.Error),
-            Result<T>.ExceptionalFailure exceptionalFailure => Result.Failure<TResult>(exceptionalFailure.Exception),
-            _ => throw new InvalidOperationException("Unknown StoreResult type.")
-        };
+            return result switch
+            {
+                Result<T>.Success success => Result.Success(await onSuccess(success.Value)),
+                Result<T>.Failure failure => Result.Failure<TResult>(failure.Error),
+                Result<T>.ExceptionalFailure exceptionalFailure =>
+                    Result.Failure<TResult>(exceptionalFailure.Exception),
+                _ => throw new InvalidOperationException("Unknown StoreResult type.")
+            };
+        });
+
+        return tryResult;
     }
-    
+
     public static async Task<Result<TResult>> SelectMany<T, TResult>(this Result<T> result,
         Func<T, Task<Result<TResult>>> onSuccess)
     {
-        return result switch
+        var tryResult = await Result.Try(async () =>
         {
-            Result<T>.Success success => await onSuccess(success.Value),
-            Result<T>.Failure failure => Result.Failure<TResult>(failure.Error),
-            Result<T>.ExceptionalFailure exceptionalFailure => Result.Failure<TResult>(exceptionalFailure.Exception),
-            _ => throw new InvalidOperationException("Unknown StoreResult type.")
-        };
+            return result switch
+            {
+                Result<T>.Success success => await onSuccess(success.Value),
+                Result<T>.Failure failure => Result.Failure<TResult>(failure.Error),
+                Result<T>.ExceptionalFailure exceptionalFailure =>
+                    Result.Failure<TResult>(exceptionalFailure.Exception),
+                _ => throw new InvalidOperationException("Unknown StoreResult type.")
+            };
+        });
+        
+        return tryResult;
     }
 
     public static void OnSuccess<T>(this Result<T> result, Action<T> onSuccess)
