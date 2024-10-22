@@ -1,0 +1,35 @@
+<Project>
+	<Import Project="..\build\version.props" />
+	<PropertyGroup Label="Package">
+		<PackageIcon>image.jpg</PackageIcon>
+		<Authors>RickDotNet</Authors>
+		<RepositoryUrl>https://github.com/rickdotnet/base</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryRoot>$(MSBuildThisFileDirectory)</RepositoryRoot>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageTags>RickDotNet;BCL;</PackageTags>
+		<Description>A quiet spot for things that do stuff.</Description>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+	</PropertyGroup>
+	
+	<ItemGroup>
+        	<None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+        	<None Include="..\..\build\image.jpg" Pack="true" PackagePath="\"/>
+	</ItemGroup>
+
+	<!-- Using SourceLink -->
+	<PropertyGroup>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Update="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+	</ItemGroup>
+	<ItemGroup>
+ 	   <InternalsVisibleTo Include="$(AssemblyName).Tests" />
+	</ItemGroup>
+</Project>
+

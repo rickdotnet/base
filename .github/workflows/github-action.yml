@@ -1,0 +1,21 @@
+name: RickDotNet.Base Publish
+
+on:
+  push:
+    branches: [ "main" ]
+    paths: "build/version.props"
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup Dotnet
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.x
+    - name: Build and Publish
+      run: dotnet run --project ./build/build.csproj -- publish
+      env:
+        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}

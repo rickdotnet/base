@@ -8,4 +8,7 @@
         <AssemblyName>RickDotNet.Base</AssemblyName>
     </PropertyGroup>
 
+    <PropertyGroup Label="Package">
+        <PackageId>RickDotNet.Base</PackageId>
+    </PropertyGroup>
 </Project>
