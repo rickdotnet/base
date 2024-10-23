@@ -245,18 +245,33 @@ public static class ResultExtensions
         return result;
     }
 
-    public static void Resolve<T>(this Result<T> result, Action<T> onSuccess, Action<string>? onFailure = null,
-        Action<Exception>? onException = null)
+    public static void Resolve<T>(this Result<T> result, Action<T> onSuccess, Action<string> onError)
     {
         switch (result)
         {
             case Result<T>.Success success:
                 onSuccess(success.Value);
                 break;
-            case Result<T>.Failure failure when onFailure != null:
+            case Result<T>.Failure failure:
+                onError(failure.Error);
+                break;
+            case Result<T>.ExceptionalFailure exFail:
+                onError(exFail.Exception.Message);
+                break;
+        }
+    }
+    
+    public static void Resolve<T>(this Result<T> result, Action<T> onSuccess, Action<string> onFailure, Action<Exception> onException)
+    {
+        switch (result)
+        {
+            case Result<T>.Success success:
+                onSuccess(success.Value);
+                break;
+            case Result<T>.Failure failure:
                 onFailure(failure.Error);
                 break;
-            case Result<T>.ExceptionalFailure exFail when onException != null:
+            case Result<T>.ExceptionalFailure exFail:
                 onException(exFail.Exception);
                 break;
         }
