@@ -230,6 +230,113 @@ public class ResultTests
     }
     
     [Fact]
+    public async Task ResolveAsync_WithOnSuccessAndOnError_CallsOnSuccessForSuccessResult()
+    {
+        var result = Result.Success(100);
+        var successCalled = false;
+        var errorCalled = false;
+
+        await result.ResolveAsync(
+            onSuccess: val => Task.FromResult(successCalled = val == 100),
+            onError: _ => Task.FromResult(errorCalled = true)
+        );
+
+        Assert.True(successCalled);
+        Assert.False(errorCalled);
+    }
+    
+    [Fact]
+    public async Task ResolveAsync_WithOnSuccessAndOnError_CallsOnErrorForFailureResult()
+    {
+        var result = Result.Failure<int>("Error occurred");
+        var successCalled = false;
+        var errorCalled = false;
+
+        await result.ResolveAsync(
+            onSuccess: _ => Task.FromResult(successCalled = true),
+            onError: err => Task.FromResult(errorCalled = err == "Error occurred")
+        );
+
+        Assert.False(successCalled);
+        Assert.True(errorCalled);
+    }
+    
+    [Fact]
+    public async Task ResolveAsync_WithOnSuccessAndOnError_CallsOnErrorForExceptionalFailure()
+    {
+        var exception = new InvalidOperationException("Something went wrong");
+        var result = Result.Failure<int>(exception);
+        var successCalled = false;
+        var errorCalled = false;
+
+        await result.ResolveAsync(
+            onSuccess: _ => Task.FromResult(successCalled = true),
+            onError: err => Task.FromResult(errorCalled = err == exception.Message)
+        );
+
+        Assert.False(successCalled);
+        Assert.True(errorCalled);
+    }
+    
+    [Fact]
+    public async Task ResolveAsync_WithAllThree_CallsOnSuccessForSuccessResult()
+    {
+        var result = Result.Success(200);
+        var successCalled = false;
+        var failureCalled = false;
+        var exceptionCalled = false;
+
+        await result.ResolveAsync(
+            onSuccess: val => Task.FromResult(successCalled = val == 200),
+            onFailure: _ => Task.FromResult(failureCalled = true),
+            onException: _ => Task.FromResult(exceptionCalled = true)
+        );
+
+        Assert.True(successCalled);
+        Assert.False(failureCalled);
+        Assert.False(exceptionCalled);
+    }
+    
+    [Fact]
+    public async Task ResolveAsync_WithAllThree_CallsOnFailureForFailureResult()
+    {
+        var result = Result.Failure<int>("Failure occurred");
+        var successCalled = false;
+        var failureCalled = false;
+        var exceptionCalled = false;
+
+        await result.ResolveAsync(
+            onSuccess: _ => Task.FromResult(successCalled = true),
+            onFailure: err => Task.FromResult(failureCalled = err == "Failure occurred"),
+            onException: _ => Task.FromResult(exceptionCalled = true)
+        );
+
+        Assert.False(successCalled);
+        Assert.True(failureCalled);
+        Assert.False(exceptionCalled);
+    }
+    
+    [Fact]
+    public async Task ResolveAsync_WithAllThree_CallsOnExceptionForExceptionalFailure()
+    {
+        var exception = new InvalidOperationException("Something blew up");
+        var result = Result.Failure<int>(exception);
+        var successCalled = false;
+        var failureCalled = false;
+        var exceptionCalled = false;
+
+        await result.ResolveAsync(
+            onSuccess: _ => Task.FromResult(successCalled = true),
+            onFailure: _ => Task.FromResult(failureCalled = true),
+            onException: ex => Task.FromResult(exceptionCalled = ex is InvalidOperationException)
+        );
+
+        Assert.False(successCalled);
+        Assert.False(failureCalled);
+        Assert.True(exceptionCalled);
+    }
+    
+    [Fact]
     public void OnSuccess_Success_ExecutesAction()
     {
         var result = Result.Success(5);

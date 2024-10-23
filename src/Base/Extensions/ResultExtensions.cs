@@ -242,6 +242,7 @@ public static class ResultExtensions
     {
         if (result is Result<T>.ExceptionalFailure exceptionalFailure)
             await onExceptionalFailure(exceptionalFailure.Exception);
+
         return result;
     }
 
@@ -261,6 +262,17 @@ public static class ResultExtensions
         }
     }
     
+    public static Task ResolveAsync<T>(this Result<T> result, Func<T, Task> onSuccess, Func<string, Task> onError)
+    {
+        return result switch
+        {
+            Result<T>.Success success => onSuccess(success.Value),
+            Result<T>.Failure failure => onError(failure.Error),
+            Result<T>.ExceptionalFailure exFail => onError(exFail.Exception.Message),
+            _ => Task.CompletedTask
+        };
+    }
+    
     public static void Resolve<T>(this Result<T> result, Action<T> onSuccess, Action<string> onFailure, Action<Exception> onException)
     {
         switch (result)
@@ -275,6 +287,17 @@ public static class ResultExtensions
                 onException(exFail.Exception);
                 break;
         }
+    }
+    
+    public static Task ResolveAsync<T>(this Result<T> result, Func<T, Task> onSuccess, Func<string, Task> onFailure, Func<Exception, Task> onException)
+    {
+        return result switch
+        {
+            Result<T>.Success success => onSuccess(success.Value),
+            Result<T>.Failure failure => onFailure(failure.Error),
+            Result<T>.ExceptionalFailure exFail => onException(exFail.Exception),
+            _ => Task.CompletedTask
+        };
     }
 
     public static T? ValueOrDefault<T>(this Result<T> result, T? defaultValue = default)
