@@ -15,7 +15,7 @@ public class ResultTests
         Assert.NotNull(successResult);
         Assert.Equal(420, successResult.Value);
     }
-    
+
     [Fact]
     public void ImplicitConversion_FromException_ReturnsExceptionalFailureResult()
     {
@@ -23,14 +23,14 @@ public class ResultTests
 
         Result<int> result = exception;
         Assert.False(result);
-        
+
         var exceptionalFailure = result as Result<int>.ExceptionalFailure;
         Assert.NotNull(exceptionalFailure);
         Assert.Equal(exception.Message, exceptionalFailure.Exception.Message);
     }
-    
+
     private readonly Func<Result<int>> faultyFunc = () => throw new InvalidOperationException();
-    
+
     [Fact]
     public void Try_WithCatch_HandlerIsCalledOnException()
     {
@@ -55,13 +55,13 @@ public class ResultTests
     public void OnExceptionalFailure_ExecutesActionOnException()
     {
         var wasCalled = false;
-    
+
         var result = Result.Failure<int>(new InvalidOperationException("Oops"));
-    
-        result.OnExceptionalFailure(_ => wasCalled = true);
+
+        result.OnExceptionalFailure(ex => wasCalled = ex.Message == "Oops");
         Assert.True(wasCalled);
     }
-    
+
     [Fact]
     public void Select_Success_ReturnsTransformedResult()
     {
@@ -97,7 +97,7 @@ public class ResultTests
 
         Assert.Equal("Error", ((Result<int>.Failure)transformedResult).Error);
     }
-    
+
     [Fact]
     public async Task SelectAsync_TaskResult_Success_ChainsTogether()
     {
@@ -121,7 +121,7 @@ public class ResultTests
         Assert.False(wasCalled);
         Assert.Equal("Error occurred", ((Result<bool>.Failure)chainedResult).Error);
     }
-    
+
     [Fact]
     public void Resolve_WithOnSuccessAndOnError_CallsOnSuccessForSuccessResult()
     {
@@ -137,7 +137,7 @@ public class ResultTests
         Assert.True(successCalled);
         Assert.False(errorCalled);
     }
-    
+
     [Fact]
     public void Resolve_WithOnSuccessAndOnError_CallsOnErrorForFailureResult()
     {
@@ -153,7 +153,7 @@ public class ResultTests
         Assert.False(successCalled);
         Assert.True(errorCalled);
     }
-    
+
     [Fact]
     public void Resolve_WithOnSuccessAndOnError_CallsOnErrorForExceptionalFailure()
     {
@@ -170,7 +170,7 @@ public class ResultTests
         Assert.False(successCalled);
         Assert.True(errorCalled);
     }
-    
+
     [Fact]
     public void Resolve_WithAllThree_CallsOnSuccessForSuccessResult()
     {
@@ -189,7 +189,7 @@ public class ResultTests
         Assert.False(failureCalled);
         Assert.False(exceptionCalled);
     }
-    
+
     [Fact]
     public void Resolve_WithAllThree_CallsOnFailureForFailureResult()
     {
@@ -208,7 +208,7 @@ public class ResultTests
         Assert.True(failureCalled);
         Assert.False(exceptionCalled);
     }
-    
+
     [Fact]
     public void Resolve_WithAllThree_CallsOnExceptionForExceptionalFailure()
     {
@@ -228,7 +228,7 @@ public class ResultTests
         Assert.False(failureCalled);
         Assert.True(exceptionCalled);
     }
-    
+
     [Fact]
     public async Task ResolveAsync_WithOnSuccessAndOnError_CallsOnSuccessForSuccessResult()
     {
@@ -244,7 +244,7 @@ public class ResultTests
         Assert.True(successCalled);
         Assert.False(errorCalled);
     }
-    
+
     [Fact]
     public async Task ResolveAsync_WithOnSuccessAndOnError_CallsOnErrorForFailureResult()
     {
@@ -260,7 +260,7 @@ public class ResultTests
         Assert.False(successCalled);
         Assert.True(errorCalled);
     }
-    
+
     [Fact]
     public async Task ResolveAsync_WithOnSuccessAndOnError_CallsOnErrorForExceptionalFailure()
     {
@@ -277,7 +277,7 @@ public class ResultTests
         Assert.False(successCalled);
         Assert.True(errorCalled);
     }
-    
+
     [Fact]
     public async Task ResolveAsync_WithAllThree_CallsOnSuccessForSuccessResult()
     {
@@ -296,7 +296,7 @@ public class ResultTests
         Assert.False(failureCalled);
         Assert.False(exceptionCalled);
     }
-    
+
     [Fact]
     public async Task ResolveAsync_WithAllThree_CallsOnFailureForFailureResult()
     {
@@ -315,7 +315,7 @@ public class ResultTests
         Assert.True(failureCalled);
         Assert.False(exceptionCalled);
     }
-    
+
     [Fact]
     public async Task ResolveAsync_WithAllThree_CallsOnExceptionForExceptionalFailure()
     {
@@ -335,7 +335,7 @@ public class ResultTests
         Assert.False(failureCalled);
         Assert.True(exceptionCalled);
     }
-    
+
     [Fact]
     public void OnSuccess_Success_ExecutesAction()
     {
@@ -384,8 +384,26 @@ public class ResultTests
     public void ValueOrDefault_Failure_ReturnsDefaultValue()
     {
         var result = Result.Failure<int>("Error");
-        var value = result.ValueOrDefault(10);
+        var value1 = result.ValueOrDefault();
+        var value2 = result.ValueOrDefault(10);
 
+        Assert.Equal(0, value1);
+        Assert.Equal(10, value2);
+    }
+
+    [Fact]
+    public async Task ValueOrDefaultAsync_Success_ReturnsValue()
+    {
+        var result = Task.FromResult(Result.Success(5));
+        var value = await result.ValueOrDefaultAsync(10);
+
+        Assert.Equal(5, value);
+    }
+
+    [Fact]
+    public async Task ValueOrDefaultAsync_Failure_ReturnsDefaultValue()
+    {
+        var value = await ValueTask.FromResult(Result.Failure<int>("Error")).ValueOrDefaultAsync(10);;
         Assert.Equal(10, value);
     }
 

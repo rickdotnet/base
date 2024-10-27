@@ -308,4 +308,23 @@ public static class ResultExtensions
             _ => defaultValue
         };
     }
+    
+    public static async Task<T?> ValueOrDefaultAsync<T>(this Task<Result<T>> resultTask, T? defaultValue = default)
+    {
+        var result = await resultTask;
+        return result switch
+        {
+            Result<T>.Success success => success.Value,
+            _ => defaultValue
+        };
+    }
+    public static async Task<T?> ValueOrDefaultAsync<T>(this ValueTask<Result<T>> resultTask, T? defaultValue = default)
+    {
+        var result = await resultTask;
+        return result switch
+        {
+            Result<T>.Success success => success.Value,
+            _ => defaultValue
+        };
+    }
 }
