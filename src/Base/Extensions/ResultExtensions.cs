@@ -84,7 +84,7 @@ public static class ResultExtensions
 
         return tryResult;
     }
-    
+
     public static Result<TResult> SelectMany<T, TResult>(this Result<T> result,
         Func<T, Result<TResult>> onSuccess)
     {
@@ -102,6 +102,7 @@ public static class ResultExtensions
 
         return tryResult;
     }
+
     public static async Task<Result<TResult>> SelectManyAsync<T, TResult>(this Result<T> result,
         Func<T, Task<Result<TResult>>> onSuccess)
     {
@@ -125,13 +126,10 @@ public static class ResultExtensions
     /// </summary>
     /// <param name="result">The result to check.</param>
     /// <param name="onSuccess">The action to execute if the result is a <see cref="Result{T}.Success"/>.</param>
-    /// <returns>The original result.</returns>
-    public static Result<T> OnSuccess<T>(this Result<T> result, Action<T> onSuccess)
+    public static void OnSuccess<T>(this Result<T> result, Action<T> onSuccess)
     {
         if (result is Result<T>.Success success)
             onSuccess(success.Value);
-
-        return result;
     }
 
     /// <summary>
@@ -139,13 +137,12 @@ public static class ResultExtensions
     /// </summary>
     /// <param name="result">The result to check.</param>
     /// <param name="onSuccess">The action to execute if the result is a <see cref="Result{T}.Success"/>.</param>
-    /// <returns>The original result.</returns>
-    public static async Task<Result<T>> OnSuccessAsync<T>(this Result<T> result, Func<T, Task> onSuccess)
+    public static Task OnSuccessAsync<T>(this Result<T> result, Func<T, Task> onSuccess)
     {
         if (result is Result<T>.Success success)
-            await onSuccess(success.Value);
+            return onSuccess(success.Value);
 
-        return result;
+        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -153,8 +150,7 @@ public static class ResultExtensions
     /// </summary>
     /// <param name="result">The result to check.</param>
     /// <param name="onError">The action to execute if the result is a non-success.</param>
-    /// <returns>The original result.</returns>
-    public static Result<T> OnError<T>(this Result<T> result, Action<string> onError)
+    public static void OnError<T>(this Result<T> result, Action<string> onError)
     {
         switch (result)
         {
@@ -165,8 +161,6 @@ public static class ResultExtensions
                 onError(exceptionalFailure.Exception.Message);
                 break;
         }
-
-        return result;
     }
 
     /// <summary>
@@ -174,20 +168,14 @@ public static class ResultExtensions
     /// </summary>
     /// <param name="result">The result to check.</param>
     /// <param name="onError">The action to execute if the result is a non-success.</param>
-    /// <returns>The original result.</returns>
-    public static async Task<Result<T>> OnErrorAsync<T>(this Result<T> result, Func<string, Task> onError)
+    public static Task OnErrorAsync<T>(this Result<T> result, Func<string, Task> onError)
     {
-        switch (result)
+        return result switch
         {
-            case Result<T>.Failure failure:
-                await onError(failure.Error);
-                break;
-            case Result<T>.ExceptionalFailure exceptionalFailure:
-                await onError(exceptionalFailure.Exception.Message);
-                break;
-        }
-
-        return result;
+            Result<T>.Failure failure => onError(failure.Error),
+            Result<T>.ExceptionalFailure exceptionalFailure => onError(exceptionalFailure.Exception.Message),
+            _ => Task.CompletedTask
+        };
     }
 
     /// <summary>
@@ -195,13 +183,10 @@ public static class ResultExtensions
     /// </summary>
     /// <param name="result">The result to check.</param>
     /// <param name="onFailure">The action to execute if the result is a <see cref="Result{T}.Failure"/>.</param>
-    /// <returns>The original result.</returns>
-    public static Result<T> OnFailure<T>(this Result<T> result, Action<string> onFailure)
+    public static void OnFailure<T>(this Result<T> result, Action<string> onFailure)
     {
         if (result is Result<T>.Failure failure)
             onFailure(failure.Error);
-
-        return result;
     }
 
     /// <summary>
@@ -209,13 +194,12 @@ public static class ResultExtensions
     /// </summary>
     /// <param name="result">The result to check.</param>
     /// <param name="onFailure">The action to execute if the result is a <see cref="Result{T}.Failure"/>.</param>
-    /// <returns>The original result.</returns>
-    public static async Task<Result<T>> OnFailureAsync<T>(this Result<T> result, Func<string, Task> onFailure)
+    public static Task OnFailureAsync<T>(this Result<T> result, Func<string, Task> onFailure)
     {
         if (result is Result<T>.Failure failure)
-            await onFailure(failure.Error);
+            return onFailure(failure.Error);
 
-        return result;
+        return Task.CompletedTask;
     }
 
     /// <summary>
@@ -223,13 +207,10 @@ public static class ResultExtensions
     /// </summary>
     /// <param name="result">The result to check.</param>
     /// <param name="onExceptionalFailure">The action to execute if the result is a <see cref="Result{T}.ExceptionalFailure"/>.</param>
-    /// <returns>The original result.</returns>
-    public static Result<T> OnExceptionalFailure<T>(this Result<T> result, Action<Exception> onExceptionalFailure)
+    public static void OnExceptionalFailure<T>(this Result<T> result, Action<Exception> onExceptionalFailure)
     {
         if (result is Result<T>.ExceptionalFailure exceptionalFailure)
             onExceptionalFailure(exceptionalFailure.Exception);
-
-        return result;
     }
 
     /// <summary>
@@ -237,13 +218,12 @@ public static class ResultExtensions
     /// </summary>
     /// <param name="result">The result to check.</param>
     /// <param name="onExceptionalFailure">The action to execute if the result is a <see cref="Result{T}.ExceptionalFailure"/>.</param>
-    /// <returns>The original result.</returns>
-    public static async Task<Result<T>> OnExceptionalFailureAsync<T>(this Result<T> result, Func<Exception, Task> onExceptionalFailure)
+    public static Task OnExceptionalFailureAsync<T>(this Result<T> result, Func<Exception, Task> onExceptionalFailure)
     {
         if (result is Result<T>.ExceptionalFailure exceptionalFailure)
-            await onExceptionalFailure(exceptionalFailure.Exception);
+            return onExceptionalFailure(exceptionalFailure.Exception);
 
-        return result;
+        return Task.CompletedTask;
     }
 
     public static void Resolve<T>(this Result<T> result, Action<T> onSuccess, Action<string> onError)
@@ -261,7 +241,7 @@ public static class ResultExtensions
                 break;
         }
     }
-    
+
     public static Task ResolveAsync<T>(this Result<T> result, Func<T, Task> onSuccess, Func<string, Task> onError)
     {
         return result switch
@@ -272,7 +252,7 @@ public static class ResultExtensions
             _ => Task.CompletedTask
         };
     }
-    
+
     public static void Resolve<T>(this Result<T> result, Action<T> onSuccess, Action<string> onFailure, Action<Exception> onException)
     {
         switch (result)
@@ -288,7 +268,7 @@ public static class ResultExtensions
                 break;
         }
     }
-    
+
     public static Task ResolveAsync<T>(this Result<T> result, Func<T, Task> onSuccess, Func<string, Task> onFailure, Func<Exception, Task> onException)
     {
         return result switch
@@ -308,7 +288,7 @@ public static class ResultExtensions
             _ => defaultValue
         };
     }
-    
+
     public static async Task<T?> ValueOrDefaultAsync<T>(this Task<Result<T>> resultTask, T? defaultValue = default)
     {
         var result = await resultTask;
@@ -318,6 +298,7 @@ public static class ResultExtensions
             _ => defaultValue
         };
     }
+
     public static async Task<T?> ValueOrDefaultAsync<T>(this ValueTask<Result<T>> resultTask, T? defaultValue = default)
     {
         var result = await resultTask;
