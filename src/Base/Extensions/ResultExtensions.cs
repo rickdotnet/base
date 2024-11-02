@@ -42,7 +42,7 @@ public static class ResultExtensions
     /// <exception cref="InvalidOperationException">Thrown if the result is an unknown Result type.</exception>
     public static async Task<Result<TResult>> SelectAsync<T, TResult>(this Task<Result<T>> task, Func<T, Task<TResult>> onSuccess)
     {
-        var tryResult = await Result.Try(async () =>
+        var tryResult = await Result.TryAsync(async () =>
         {
             var result = await task;
 
@@ -50,8 +50,7 @@ public static class ResultExtensions
             {
                 Result<T>.Success success => Result.Success(await onSuccess(success.Value)),
                 Result<T>.Failure failure => Result.Failure<TResult>(failure.Error),
-                Result<T>.ExceptionalFailure exceptionalFailure =>
-                    Result.Failure<TResult>(exceptionalFailure.Exception),
+                Result<T>.ExceptionalFailure exceptionalFailure => Result.Failure<TResult>(exceptionalFailure.Exception),
                 _ => throw new InvalidOperationException("Unknown StoreResult type.")
             };
         });
@@ -70,7 +69,7 @@ public static class ResultExtensions
     /// <exception cref="InvalidOperationException">Thrown if the result is an unknown Result type.</exception>
     public static async Task<Result<TResult>> SelectAsync<T, TResult>(this Result<T> result, Func<T, Task<TResult>> onSuccess)
     {
-        var tryResult = await Result.Try(async () =>
+        var tryResult = await Result.TryAsync(async () =>
         {
             return result switch
             {
@@ -106,7 +105,7 @@ public static class ResultExtensions
     public static async Task<Result<TResult>> SelectManyAsync<T, TResult>(this Result<T> result,
         Func<T, Task<Result<TResult>>> onSuccess)
     {
-        var tryResult = await Result.Try(async () =>
+        var tryResult = await Result.TryAsync(async () =>
         {
             return result switch
             {

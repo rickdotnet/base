@@ -50,6 +50,32 @@ public class ResultTests
         Assert.False(result);
         Assert.Equal("Custom Error", ((Result<int>.Failure)result).Error);
     }
+    
+    [Fact]
+    public void Try_SyncOverloads_ReturnsSuccessOnSuccess()
+    {
+        var result1 = Result.Try(() => 5);
+        Assert.True(result1);
+        Assert.Equal(5, result1.ValueOrDefault());
+        
+        var result2 = Result.Try(()=> Console.WriteLine("Cool"));
+        Assert.True(result2);
+    }
+    
+    [Fact]
+    public async Task Try_AsyncOverloads_ReturnsSuccessOnSuccess()
+    {
+        var result1 = await Result.TryAsync(async () => await Task.FromResult(5));
+        Assert.True(result1);
+        Assert.Equal(5, result1.ValueOrDefault());
+        
+        var result2 = await Result.TryAsync(async () => await Task.CompletedTask);
+        Assert.True(result2);
+        
+        var result3 = await Result.TryAsync(async () => await Task.FromException<int>(new Exception("Oops")));
+        Assert.False(result3);
+        result3.OnError(error=>Assert.Equal("Oops", error));
+    }
 
     [Fact]
     public void OnExceptionalFailure_ExecutesActionOnException()
