@@ -24,7 +24,7 @@ public static class ResultExtensions
                 Result<T>.Failure fail => Result.Failure<TResult>(fail.Error),
                 Result<T>.ExceptionalFailure exceptionalFailure =>
                     Result.Failure<TResult>(exceptionalFailure.Exception),
-                _ => throw new InvalidOperationException("Unknown Result type.")
+                _ => throw new InvalidOperationException("Unknown Result type."),
             };
         });
 
@@ -51,7 +51,7 @@ public static class ResultExtensions
                 Result<T>.Success success => Result.Success(await onSuccess(success.Value)),
                 Result<T>.Failure failure => Result.Failure<TResult>(failure.Error),
                 Result<T>.ExceptionalFailure exceptionalFailure => Result.Failure<TResult>(exceptionalFailure.Exception),
-                _ => throw new InvalidOperationException("Unknown StoreResult type.")
+                _ => throw new InvalidOperationException("Unknown StoreResult type."),
             };
         });
 
@@ -77,7 +77,7 @@ public static class ResultExtensions
                 Result<T>.Failure failure => Result.Failure<TResult>(failure.Error),
                 Result<T>.ExceptionalFailure exceptionalFailure =>
                     Result.Failure<TResult>(exceptionalFailure.Exception),
-                _ => throw new InvalidOperationException("Unknown StoreResult type.")
+                _ => throw new InvalidOperationException("Unknown StoreResult type."),
             };
         });
 
@@ -95,7 +95,7 @@ public static class ResultExtensions
                 Result<T>.Failure failure => Result.Failure<TResult>(failure.Error),
                 Result<T>.ExceptionalFailure exceptionalFailure =>
                     Result.Failure<TResult>(exceptionalFailure.Exception),
-                _ => throw new InvalidOperationException("Unknown StoreResult type.")
+                _ => throw new InvalidOperationException("Unknown StoreResult type."),
             };
         });
 
@@ -113,7 +113,7 @@ public static class ResultExtensions
                 Result<T>.Failure failure => Result.Failure<TResult>(failure.Error),
                 Result<T>.ExceptionalFailure exceptionalFailure =>
                     Result.Failure<TResult>(exceptionalFailure.Exception),
-                _ => throw new InvalidOperationException("Unknown StoreResult type.")
+                _ => throw new InvalidOperationException("Unknown StoreResult type."),
             };
         });
 
@@ -173,7 +173,7 @@ public static class ResultExtensions
         {
             Result<T>.Failure failure => onError(failure.Error),
             Result<T>.ExceptionalFailure exceptionalFailure => onError(exceptionalFailure.Exception.Message),
-            _ => Task.CompletedTask
+            _ => Task.CompletedTask,
         };
     }
 
@@ -248,7 +248,7 @@ public static class ResultExtensions
             Result<T>.Success success => onSuccess(success.Value),
             Result<T>.Failure failure => onError(failure.Error),
             Result<T>.ExceptionalFailure exFail => onError(exFail.Exception.Message),
-            _ => Task.CompletedTask
+            _ => Task.CompletedTask,
         };
     }
 
@@ -275,26 +275,45 @@ public static class ResultExtensions
             Result<T>.Success success => onSuccess(success.Value),
             Result<T>.Failure failure => onFailure(failure.Error),
             Result<T>.ExceptionalFailure exFail => onException(exFail.Exception),
-            _ => Task.CompletedTask
+            _ => Task.CompletedTask,
         };
     }
 
-    public static T? ValueOrDefault<T>(this Result<T> result, T? defaultValue = default)
+    public static T ValueOrDefault<T>(this Result<T> result, T defaultValue)
     {
         return result switch
         {
             Result<T>.Success success => success.Value,
-            _ => defaultValue
+            _ => defaultValue,
+        };
+    }
+    
+    public static T? ValueOrDefault<T>(this Result<T> result)
+    {
+        return result switch
+        {
+            Result<T>.Success success => success.Value,
+            _ => default,
         };
     }
 
-    public static async Task<T?> ValueOrDefaultAsync<T>(this Task<Result<T>> resultTask, T? defaultValue = default)
+    public static async Task<T> ValueOrDefaultAsync<T>(this Task<Result<T>> resultTask, T defaultValue)
     {
         var result = await resultTask;
         return result switch
         {
             Result<T>.Success success => success.Value,
-            _ => defaultValue
+            _ => defaultValue,
+        };
+    }
+    
+    public static async Task<T?> ValueOrDefaultAsync<T>(this Task<Result<T>> resultTask)
+    {
+        var result = await resultTask;
+        return result switch
+        {
+            Result<T>.Success success => success.Value,
+            _ => default,
         };
     }
 
@@ -304,7 +323,7 @@ public static class ResultExtensions
         return result switch
         {
             Result<T>.Success success => success.Value,
-            _ => defaultValue
+            _ => defaultValue,
         };
     }
 }
