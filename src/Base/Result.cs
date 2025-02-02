@@ -7,6 +7,8 @@ public struct VoidResult
 
 public static class Result
 {
+    public static Result<VoidResult> Success() => new Result<VoidResult>.Success(VoidResult.Default);
+    public static Result<VoidResult> Failure(string error) => new Result<VoidResult>.Failure(error);
     public static Result<T> Success<T>(T value) => new Result<T>.Success(value);
     public static Result<T> Failure<T>(string errorMessage) => new Result<T>.Failure(errorMessage);
     public static Result<T> Failure<T>(Exception error) => new Result<T>.ExceptionalFailure(error);

@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <RootNamespace>RickDotNet.Base</RootNamespace>
         <AssemblyName>RickDotNet.Base</AssemblyName>
+        <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
     </PropertyGroup>
 
     <PropertyGroup Label="Package">
