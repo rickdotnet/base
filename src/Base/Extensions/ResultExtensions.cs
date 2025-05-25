@@ -13,7 +13,6 @@ public static class ResultExtensions
     /// <typeparam name="T">The type of the original result.</typeparam>
     /// <typeparam name="TResult">The type of the new result.</typeparam>
     /// <returns>The mapped result.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if the result is an unknown Result type.</exception>
     public static Result<TResult> Select<T, TResult>(this Result<T> result, Func<T, TResult> onSuccess)
     {
         var tryResult = Result.Try(() =>
@@ -21,9 +20,8 @@ public static class ResultExtensions
             return result switch
             {
                 Result<T>.Success success => Result.Success(onSuccess(success.Value)),
-                Result<T>.Failure fail => Result.Failure<TResult>(fail.Error),
-                Result<T>.ExceptionalFailure exceptionalFailure =>
-                    Result.Failure<TResult>(exceptionalFailure.Exception),
+                Result<T>.Error error => Result.Error<TResult>(error.ErrorMessage),
+                Result<T>.Failure failure => Result.Failure<TResult>(failure.Exception),
                 _ => throw new InvalidOperationException("Unknown Result type."),
             };
         });
@@ -39,7 +37,6 @@ public static class ResultExtensions
     /// <typeparam name="T">The type of the original result.</typeparam>
     /// <typeparam name="TResult">The type of the new result.</typeparam>
     /// <returns>The mapped result.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if the result is an unknown Result type.</exception>
     public static async Task<Result<TResult>> SelectAsync<T, TResult>(this Task<Result<T>> task, Func<T, Task<TResult>> onSuccess)
     {
         var tryResult = await Result.TryAsync(async () =>
@@ -49,9 +46,9 @@ public static class ResultExtensions
             return result switch
             {
                 Result<T>.Success success => Result.Success(await onSuccess(success.Value)),
-                Result<T>.Failure failure => Result.Failure<TResult>(failure.Error),
-                Result<T>.ExceptionalFailure exceptionalFailure => Result.Failure<TResult>(exceptionalFailure.Exception),
-                _ => throw new InvalidOperationException("Unknown StoreResult type."),
+                Result<T>.Error error => Result.Error<TResult>(error.ErrorMessage),
+                Result<T>.Failure failure => Result.Failure<TResult>(failure.Exception),
+                _ => throw new InvalidOperationException("Unknown Result type."),
             };
         });
 
@@ -66,7 +63,6 @@ public static class ResultExtensions
     /// <typeparam name="T">The type of the original result.</typeparam>
     /// <typeparam name="TResult">The type of the new result.</typeparam>
     /// <returns>The mapped result.</returns>
-    /// <exception cref="InvalidOperationException">Thrown if the result is an unknown Result type.</exception>
     public static async Task<Result<TResult>> SelectAsync<T, TResult>(this Result<T> result, Func<T, Task<TResult>> onSuccess)
     {
         var tryResult = await Result.TryAsync(async () =>
@@ -74,10 +70,10 @@ public static class ResultExtensions
             return result switch
             {
                 Result<T>.Success success => Result.Success(await onSuccess(success.Value)),
-                Result<T>.Failure failure => Result.Failure<TResult>(failure.Error),
-                Result<T>.ExceptionalFailure exceptionalFailure =>
-                    Result.Failure<TResult>(exceptionalFailure.Exception),
-                _ => throw new InvalidOperationException("Unknown StoreResult type."),
+                Result<T>.Error error => Result.Error<TResult>(error.ErrorMessage),
+                Result<T>.Failure failure =>
+                    Result.Failure<TResult>(failure.Exception),
+                _ => throw new InvalidOperationException("Unknown Result type."),
             };
         });
 
@@ -92,10 +88,10 @@ public static class ResultExtensions
             return result switch
             {
                 Result<T>.Success success => onSuccess(success.Value),
-                Result<T>.Failure failure => Result.Failure<TResult>(failure.Error),
-                Result<T>.ExceptionalFailure exceptionalFailure =>
-                    Result.Failure<TResult>(exceptionalFailure.Exception),
-                _ => throw new InvalidOperationException("Unknown StoreResult type."),
+                Result<T>.Error error => Result.Error<TResult>(error.ErrorMessage),
+                Result<T>.Failure failure =>
+                    Result.Failure<TResult>(failure.Exception),
+                _ => throw new InvalidOperationException("Unknown Result type."),
             };
         });
 
@@ -110,10 +106,10 @@ public static class ResultExtensions
             return result switch
             {
                 Result<T>.Success success => await onSuccess(success.Value),
-                Result<T>.Failure failure => Result.Failure<TResult>(failure.Error),
-                Result<T>.ExceptionalFailure exceptionalFailure =>
-                    Result.Failure<TResult>(exceptionalFailure.Exception),
-                _ => throw new InvalidOperationException("Unknown StoreResult type."),
+                Result<T>.Error error => Result.Error<TResult>(error.ErrorMessage),
+                Result<T>.Failure failure =>
+                    Result.Failure<TResult>(failure.Exception),
+                _ => throw new InvalidOperationException("Unknown Result type."),
             };
         });
 
@@ -145,7 +141,7 @@ public static class ResultExtensions
     }
 
     /// <summary>
-    ///   Executes the <paramref name="onError"/> action if the result is a <see cref="Result{T}.Failure"/> or a <see cref="Result{T}.ExceptionalFailure"/>.
+    ///   Executes the <paramref name="onError"/> action if the result is a <see cref="Result{T}.Error"/> or a <see cref="Result{T}.Failure"/>.
     /// </summary>
     /// <param name="result">The result to check.</param>
     /// <param name="onError">The action to execute if the result is a non-success.</param>
@@ -153,17 +149,17 @@ public static class ResultExtensions
     {
         switch (result)
         {
-            case Result<T>.Failure failure:
-                onError(failure.Error);
+            case Result<T>.Error error:
+                onError(error.ErrorMessage);
                 break;
-            case Result<T>.ExceptionalFailure exceptionalFailure:
-                onError(exceptionalFailure.Exception.Message);
+            case Result<T>.Failure failure:
+                onError(failure.Exception.Message);
                 break;
         }
     }
 
     /// <summary>
-    ///   Executes the <paramref name="onError"/> action if the result is a <see cref="Result{T}.Failure"/> or a <see cref="Result{T}.ExceptionalFailure"/>.
+    ///   Executes the <paramref name="onError"/> action if the result is a <see cref="Result{T}.Error"/> or a <see cref="Result{T}.Failure"/>.
     /// </summary>
     /// <param name="result">The result to check.</param>
     /// <param name="onError">The action to execute if the result is a non-success.</param>
@@ -171,8 +167,8 @@ public static class ResultExtensions
     {
         return result switch
         {
-            Result<T>.Failure failure => onError(failure.Error),
-            Result<T>.ExceptionalFailure exceptionalFailure => onError(exceptionalFailure.Exception.Message),
+            Result<T>.Error error => onError(error.ErrorMessage),
+            Result<T>.Failure failure => onError(failure.Exception.Message),
             _ => Task.CompletedTask,
         };
     }
@@ -182,10 +178,10 @@ public static class ResultExtensions
     /// </summary>
     /// <param name="result">The result to check.</param>
     /// <param name="onFailure">The action to execute if the result is a <see cref="Result{T}.Failure"/>.</param>
-    public static void OnFailure<T>(this Result<T> result, Action<string> onFailure)
+    public static void OnFailure<T>(this Result<T> result, Action<Exception> onFailure)
     {
         if (result is Result<T>.Failure failure)
-            onFailure(failure.Error);
+            onFailure(failure.Exception);
     }
 
     /// <summary>
@@ -193,34 +189,10 @@ public static class ResultExtensions
     /// </summary>
     /// <param name="result">The result to check.</param>
     /// <param name="onFailure">The action to execute if the result is a <see cref="Result{T}.Failure"/>.</param>
-    public static Task OnFailureAsync<T>(this Result<T> result, Func<string, Task> onFailure)
+    public static Task OnFailureAsync<T>(this Result<T> result, Func<Exception, Task> onFailure)
     {
         if (result is Result<T>.Failure failure)
-            return onFailure(failure.Error);
-
-        return Task.CompletedTask;
-    }
-
-    /// <summary>
-    /// Executes the <paramref name="onExceptionalFailure"/> action if the result is a <see cref="Result{T}.ExceptionalFailure"/>.
-    /// </summary>
-    /// <param name="result">The result to check.</param>
-    /// <param name="onExceptionalFailure">The action to execute if the result is a <see cref="Result{T}.ExceptionalFailure"/>.</param>
-    public static void OnExceptionalFailure<T>(this Result<T> result, Action<Exception> onExceptionalFailure)
-    {
-        if (result is Result<T>.ExceptionalFailure exceptionalFailure)
-            onExceptionalFailure(exceptionalFailure.Exception);
-    }
-
-    /// <summary>
-    /// Executes the <paramref name="onExceptionalFailure"/> action if the result is a <see cref="Result{T}.ExceptionalFailure"/>.
-    /// </summary>
-    /// <param name="result">The result to check.</param>
-    /// <param name="onExceptionalFailure">The action to execute if the result is a <see cref="Result{T}.ExceptionalFailure"/>.</param>
-    public static Task OnExceptionalFailureAsync<T>(this Result<T> result, Func<Exception, Task> onExceptionalFailure)
-    {
-        if (result is Result<T>.ExceptionalFailure exceptionalFailure)
-            return onExceptionalFailure(exceptionalFailure.Exception);
+            return onFailure(failure.Exception);
 
         return Task.CompletedTask;
     }
@@ -232,10 +204,10 @@ public static class ResultExtensions
             case Result<T>.Success success:
                 onSuccess(success.Value);
                 break;
-            case Result<T>.Failure failure:
-                onError(failure.Error);
+            case Result<T>.Error error:
+                onError(error.ErrorMessage);
                 break;
-            case Result<T>.ExceptionalFailure exFail:
+            case Result<T>.Failure exFail:
                 onError(exFail.Exception.Message);
                 break;
         }
@@ -246,35 +218,35 @@ public static class ResultExtensions
         return result switch
         {
             Result<T>.Success success => onSuccess(success.Value),
-            Result<T>.Failure failure => onError(failure.Error),
-            Result<T>.ExceptionalFailure exFail => onError(exFail.Exception.Message),
+            Result<T>.Error error => onError(error.ErrorMessage),
+            Result<T>.Failure exFail => onError(exFail.Exception.Message),
             _ => Task.CompletedTask,
         };
     }
 
-    public static void Resolve<T>(this Result<T> result, Action<T> onSuccess, Action<string> onFailure, Action<Exception> onException)
+    public static void Resolve<T>(this Result<T> result, Action<T> onSuccess, Action<string> onError, Action<Exception> onFailure)
     {
         switch (result)
         {
             case Result<T>.Success success:
                 onSuccess(success.Value);
                 break;
-            case Result<T>.Failure failure:
-                onFailure(failure.Error);
+            case Result<T>.Error error:
+                onError(error.ErrorMessage);
                 break;
-            case Result<T>.ExceptionalFailure exFail:
-                onException(exFail.Exception);
+            case Result<T>.Failure exFail:
+                onFailure(exFail.Exception);
                 break;
         }
     }
 
-    public static Task ResolveAsync<T>(this Result<T> result, Func<T, Task> onSuccess, Func<string, Task> onFailure, Func<Exception, Task> onException)
+    public static Task ResolveAsync<T>(this Result<T> result, Func<T, Task> onSuccess, Func<string, Task> onError, Func<Exception, Task> onFailure)
     {
         return result switch
         {
             Result<T>.Success success => onSuccess(success.Value),
-            Result<T>.Failure failure => onFailure(failure.Error),
-            Result<T>.ExceptionalFailure exFail => onException(exFail.Exception),
+            Result<T>.Error error => onError(error.ErrorMessage),
+            Result<T>.Failure exFail => onFailure(exFail.Exception),
             _ => Task.CompletedTask,
         };
     }

@@ -17,16 +17,16 @@ public class ResultTests
     }
 
     [Fact]
-    public void ImplicitConversion_FromException_ReturnsExceptionalFailureResult()
+    public void ImplicitConversion_FromException_ReturnsFailureResult()
     {
-        var exception = new InvalidOperationException("Something broke");
+        var exception = new InvalidOperationException("BOOM!");
 
         Result<int> result = exception;
         Assert.False(result);
 
-        var exceptionalFailure = result as Result<int>.ExceptionalFailure;
-        Assert.NotNull(exceptionalFailure);
-        Assert.Equal(exception.Message, exceptionalFailure.Exception.Message);
+        var failure = result as Result<int>.Failure;
+        Assert.NotNull(failure);
+        Assert.Equal(exception.Message, failure.Exception.Message);
     }
 
     private readonly Func<Result<int>> faultyFunc = () => throw new InvalidOperationException();
@@ -43,48 +43,48 @@ public class ResultTests
     }
 
     [Fact]
-    public void Try_WithErrorMessage_ReturnsFailureWithMessage()
+    public void Try_WithErrorMessage_ReturnsErrorWithMessage()
     {
-        var result = Result.Try(faultyFunc, "Custom Error");
+        var result = Result.Try(faultyFunc, "Error");
 
         Assert.False(result);
-        Assert.Equal("Custom Error", ((Result<int>.Failure)result).Error);
+        Assert.Equal("Error", ((Result<int>.Error)result).ErrorMessage);
     }
-    
+
     [Fact]
     public void Try_SyncOverloads_ReturnsSuccessOnSuccess()
     {
         var result1 = Result.Try(() => 5);
         Assert.True(result1);
         Assert.Equal(5, result1.ValueOrDefault());
-        
-        var result2 = Result.Try(()=> Console.WriteLine("Cool"));
+
+        var result2 = Result.Try(() => Console.WriteLine("Cool"));
         Assert.True(result2);
     }
-    
+
     [Fact]
     public async Task Try_AsyncOverloads_ReturnsSuccessOnSuccess()
     {
         var result1 = await Result.TryAsync(async () => await Task.FromResult(5));
         Assert.True(result1);
         Assert.Equal(5, result1.ValueOrDefault());
-        
+
         var result2 = await Result.TryAsync(async () => await Task.CompletedTask);
         Assert.True(result2);
-        
+
         var result3 = await Result.TryAsync(async () => await Task.FromException<int>(new Exception("Oops")));
         Assert.False(result3);
-        result3.OnError(error=>Assert.Equal("Oops", error));
+        result3.OnError(error => Assert.Equal("Oops", error));
     }
 
     [Fact]
-    public void OnExceptionalFailure_ExecutesActionOnException()
+    public void OnFailure_ExecutesActionOnException()
     {
         var wasCalled = false;
 
         var result = Result.Failure<int>(new InvalidOperationException("Oops"));
 
-        result.OnExceptionalFailure(ex => wasCalled = ex.Message == "Oops");
+        result.OnFailure(ex => wasCalled = ex.Message == "Oops");
         Assert.True(wasCalled);
     }
 
@@ -100,10 +100,11 @@ public class ResultTests
     [Fact]
     public void Select_Failure_ReturnsFailure()
     {
-        var result = Result.Failure<int>("Error");
+        var exception = new Exception("Failure");
+        var result = Result.Failure<int>(exception);
         var transformedResult = result.Select(x => x * 2);
 
-        Assert.Equal("Error", ((Result<int>.Failure)transformedResult).Error);
+        Assert.Equal(exception.Message, ((Result<int>.Failure)transformedResult).Exception.Message);
     }
 
     [Fact]
@@ -118,10 +119,11 @@ public class ResultTests
     [Fact]
     public async Task SelectAsync_Failure_ReturnsFailure()
     {
-        var result = Result.Failure<int>("Error");
+        var exception = new Exception("Failure");
+        var result = Result.Failure<int>(exception);
         var transformedResult = await result.SelectAsync(async x => await Task.FromResult(x * 2));
 
-        Assert.Equal("Error", ((Result<int>.Failure)transformedResult).Error);
+        Assert.Equal(exception.Message, ((Result<int>.Failure)transformedResult).Exception.Message);
     }
 
     [Fact]
@@ -138,14 +140,14 @@ public class ResultTests
     [Fact]
     public async Task SelectAsync_TaskResult_Failure_SkipsOnSuccess()
     {
-        var result = Task.FromResult(Result.Failure<int>("Error occurred"));
-
+        var exception = new Exception("Failure");
+        var result = Task.FromResult(Result.Failure<int>(exception));
         var wasCalled = false;
-        var chainedResult = await result.SelectAsync(_ => Task.FromResult(wasCalled = true));
+        var transformedResult = await result.SelectAsync(_ => Task.FromResult(wasCalled = true));
 
-        Assert.False(chainedResult);
+        Assert.False(transformedResult);
         Assert.False(wasCalled);
-        Assert.Equal("Error occurred", ((Result<bool>.Failure)chainedResult).Error);
+        Assert.Equal(exception.Message, ((Result<bool>.Failure)transformedResult).Exception.Message);
     }
 
     [Fact]
@@ -167,13 +169,14 @@ public class ResultTests
     [Fact]
     public void Resolve_WithOnSuccessAndOnError_CallsOnErrorForFailureResult()
     {
-        var result = Result.Failure<int>("Error occurred");
+        var exception = new Exception("Failure");
+        var result = Result.Failure<int>(exception);
         var successCalled = false;
         var errorCalled = false;
 
         result.Resolve(
             onSuccess: _ => successCalled = true,
-            onError: err => errorCalled = err == "Error occurred"
+            onError: err => errorCalled = err == exception.Message
         );
 
         Assert.False(successCalled);
@@ -181,9 +184,9 @@ public class ResultTests
     }
 
     [Fact]
-    public void Resolve_WithOnSuccessAndOnError_CallsOnErrorForExceptionalFailure()
+    public void Resolve_WithOnSuccessAndOnError_CallsOnErrorForFailure()
     {
-        var exception = new InvalidOperationException("Something went wrong");
+        var exception = new InvalidOperationException("Failure");
         var result = Result.Failure<int>(exception);
         var successCalled = false;
         var errorCalled = false;
@@ -207,8 +210,8 @@ public class ResultTests
 
         result.Resolve(
             onSuccess: val => successCalled = val == 200,
-            onFailure: _ => failureCalled = true,
-            onException: _ => exceptionCalled = true
+            onError: _ => failureCalled = true,
+            onFailure: _ => exceptionCalled = true
         );
 
         Assert.True(successCalled);
@@ -219,26 +222,27 @@ public class ResultTests
     [Fact]
     public void Resolve_WithAllThree_CallsOnFailureForFailureResult()
     {
-        var result = Result.Failure<int>("Failure occurred");
+        var exception = new Exception("Failure");
+        var result = Result.Failure<int>(exception);
         var successCalled = false;
+        var errorCalled = false;
         var failureCalled = false;
-        var exceptionCalled = false;
 
         result.Resolve(
             onSuccess: _ => successCalled = true,
-            onFailure: err => failureCalled = err == "Failure occurred",
-            onException: _ => exceptionCalled = true
+            onError: err => errorCalled = err == exception.Message,
+            onFailure: _ => failureCalled = true
         );
 
         Assert.False(successCalled);
+        Assert.False(errorCalled);
         Assert.True(failureCalled);
-        Assert.False(exceptionCalled);
     }
 
     [Fact]
-    public void Resolve_WithAllThree_CallsOnExceptionForExceptionalFailure()
+    public void Resolve_WithAllThree_CallsOnExceptionForFailure()
     {
-        var exception = new InvalidOperationException("Something blew up");
+        var exception = new InvalidOperationException("BOOM!");
         var result = Result.Failure<int>(exception);
         var successCalled = false;
         var failureCalled = false;
@@ -246,8 +250,8 @@ public class ResultTests
 
         result.Resolve(
             onSuccess: _ => successCalled = true,
-            onFailure: _ => failureCalled = true,
-            onException: ex => exceptionCalled = ex is InvalidOperationException
+            onError: _ => failureCalled = true,
+            onFailure: ex => exceptionCalled = ex is InvalidOperationException
         );
 
         Assert.False(successCalled);
@@ -274,13 +278,14 @@ public class ResultTests
     [Fact]
     public async Task ResolveAsync_WithOnSuccessAndOnError_CallsOnErrorForFailureResult()
     {
-        var result = Result.Failure<int>("Error occurred");
+        var exception = new Exception("Error");
+        var result = Result.Error<int>(exception);
         var successCalled = false;
         var errorCalled = false;
 
         await result.ResolveAsync(
             onSuccess: _ => Task.FromResult(successCalled = true),
-            onError: err => Task.FromResult(errorCalled = err == "Error occurred")
+            onError: err => Task.FromResult(errorCalled = err == exception.Message)
         );
 
         Assert.False(successCalled);
@@ -288,9 +293,9 @@ public class ResultTests
     }
 
     [Fact]
-    public async Task ResolveAsync_WithOnSuccessAndOnError_CallsOnErrorForExceptionalFailure()
+    public async Task ResolveAsync_WithOnSuccessAndOnError_CallsOnErrorForFailure()
     {
-        var exception = new InvalidOperationException("Something went wrong");
+        var exception = new InvalidOperationException("BOOM!");
         var result = Result.Failure<int>(exception);
         var successCalled = false;
         var errorCalled = false;
@@ -314,8 +319,8 @@ public class ResultTests
 
         await result.ResolveAsync(
             onSuccess: val => Task.FromResult(successCalled = val == 200),
-            onFailure: _ => Task.FromResult(failureCalled = true),
-            onException: _ => Task.FromResult(exceptionCalled = true)
+            onError: _ => Task.FromResult(failureCalled = true),
+            onFailure: _ => Task.FromResult(exceptionCalled = true)
         );
 
         Assert.True(successCalled);
@@ -324,28 +329,29 @@ public class ResultTests
     }
 
     [Fact]
-    public async Task ResolveAsync_WithAllThree_CallsOnFailureForFailureResult()
+    public async Task ResolveAsync_WithAllThree_OnlyCallsOnFailureForFailureResult()
     {
-        var result = Result.Failure<int>("Failure occurred");
+        var exception = new Exception("Failure");
+        var result = Result.Failure<int>(exception);
         var successCalled = false;
+        var errorCalled = false;
         var failureCalled = false;
-        var exceptionCalled = false;
 
         await result.ResolveAsync(
             onSuccess: _ => Task.FromResult(successCalled = true),
-            onFailure: err => Task.FromResult(failureCalled = err == "Failure occurred"),
-            onException: _ => Task.FromResult(exceptionCalled = true)
+            onError: err => Task.FromResult(errorCalled = err == exception.Message),
+            onFailure: _ => Task.FromResult(failureCalled = true)
         );
 
         Assert.False(successCalled);
+        Assert.False(errorCalled);
         Assert.True(failureCalled);
-        Assert.False(exceptionCalled);
     }
 
     [Fact]
-    public async Task ResolveAsync_WithAllThree_CallsOnExceptionForExceptionalFailure()
+    public async Task ResolveAsync_WithAllThree_CallsOnExceptionForFailure()
     {
-        var exception = new InvalidOperationException("Something blew up");
+        var exception = new InvalidOperationException("BOOM!");
         var result = Result.Failure<int>(exception);
         var successCalled = false;
         var failureCalled = false;
@@ -353,8 +359,8 @@ public class ResultTests
 
         await result.ResolveAsync(
             onSuccess: _ => Task.FromResult(successCalled = true),
-            onFailure: _ => Task.FromResult(failureCalled = true),
-            onException: ex => Task.FromResult(exceptionCalled = ex is InvalidOperationException)
+            onError: _ => Task.FromResult(failureCalled = true),
+            onFailure: ex => Task.FromResult(exceptionCalled = ex is InvalidOperationException)
         );
 
         Assert.False(successCalled);
@@ -376,7 +382,7 @@ public class ResultTests
     [Fact]
     public void OnSuccess_Failure_DoesNotExecuteAction()
     {
-        var result = Result.Failure<int>("Error");
+        var result = Result.Failure<int>(new Exception("Failure"));
         var executed = false;
 
         result.OnSuccess(_ => executed = true);
@@ -387,7 +393,7 @@ public class ResultTests
     [Fact]
     public void OnError_Failure_ExecutesAction()
     {
-        var result = Result.Failure<int>("Error");
+        var result = Result.Failure<int>(new Exception("Failure"));
         var executed = false;
 
         result.OnError(_ => executed = true);
@@ -409,7 +415,7 @@ public class ResultTests
     [Fact]
     public void ValueOrDefault_Failure_ReturnsDefaultValue()
     {
-        var result = Result.Failure<int>("Error");
+        var result = Result.Failure<int>(new Exception("Failure"));
         var value1 = result.ValueOrDefault();
         var value2 = result.ValueOrDefault(10);
 
@@ -429,8 +435,11 @@ public class ResultTests
     [Fact]
     public async Task ValueOrDefaultAsync_Failure_ReturnsDefaultValue()
     {
-        var value = await ValueTask.FromResult(Result.Failure<int>("Error")).ValueOrDefaultAsync(10);;
-        Assert.Equal(10, value);
+        var exception = new Exception("Failure");
+        var result = await ValueTask.FromResult(Result.Failure<int>(exception)
+        ).ValueOrDefaultAsync(10);
+        
+        Assert.Equal(10, result);
     }
 
     [Fact]
@@ -447,12 +456,13 @@ public class ResultTests
     [Fact]
     public void SelectMany_Failure_StopsChain()
     {
-        var result = Result.Failure<int>("Initial Error");
+        var exception = new Exception("Failure");
+        var result = Result.Failure<int>(exception);
 
         var chainedResult = result.SelectMany(x => Result.Success(x * 2));
 
         Assert.False(chainedResult);
-        Assert.Equal("Initial Error", ((Result<int>.Failure)chainedResult).Error);
+        Assert.Equal(exception.Message, ((Result<int>.Failure)chainedResult).Exception.Message);
     }
 
     [Fact]
@@ -473,7 +483,8 @@ public class ResultTests
     [Fact]
     public async Task SelectManyAsync_Failure_StopsChain()
     {
-        var result = Result.Failure<int>("Initial Error");
+        var exception = new Exception("Failure");
+        var result = Result.Failure<int>(exception);
 
         var chainedResult = await result.SelectManyAsync(async x =>
         {
@@ -482,6 +493,6 @@ public class ResultTests
         });
 
         Assert.False(chainedResult);
-        Assert.Equal("Initial Error", ((Result<int>.Failure)chainedResult).Error);
+        Assert.Equal(exception.Message, ((Result<int>.Failure)chainedResult).Exception.Message);
     }
 }

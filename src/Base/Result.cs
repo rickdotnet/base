@@ -8,10 +8,12 @@ public struct VoidResult
 public static class Result
 {
     public static Result<VoidResult> Success() => new Result<VoidResult>.Success(VoidResult.Default);
-    public static Result<VoidResult> Failure(string error) => new Result<VoidResult>.Failure(error);
+    public static Result<VoidResult> Error(string error) => new Result<VoidResult>.Error(error);
+    public static Result<VoidResult> Failure(Exception failure) => new Result<VoidResult>.Failure(failure);
     public static Result<T> Success<T>(T value) => new Result<T>.Success(value);
-    public static Result<T> Failure<T>(string errorMessage) => new Result<T>.Failure(errorMessage);
-    public static Result<T> Failure<T>(Exception error) => new Result<T>.ExceptionalFailure(error);
+    public static Result<T> Error<T>(string errorMessage) => new Result<T>.Error(errorMessage);
+    public static Result<T> Error<T>(Exception failure) => new Result<T>.Error(failure.Message);
+    public static Result<T> Failure<T>(Exception failure) => new Result<T>.Failure(failure);
 
     public static Result<VoidResult> Try(Action action)
     {
@@ -105,9 +107,9 @@ public static class Result
         {
             return func();
         }
-        catch (Exception)
+        catch
         {
-            return Failure<T>(errorMessage);
+            return Error<T>(errorMessage);
         }
     }
 
@@ -117,9 +119,9 @@ public static class Result
         {
             return await func();
         }
-        catch (Exception)
+        catch
         {
-            return Failure<T>(errorMessage);
+            return Error<T>(errorMessage);
         }
     }
 }
@@ -128,15 +130,15 @@ public abstract record Result<T>
 {
     public sealed record Success(T Value) : Result<T>;
 
-    public sealed record Failure(string Error) : Result<T>;
+    public sealed record Error(string ErrorMessage) : Result<T>;
 
-    public sealed record ExceptionalFailure(Exception Exception) : Result<T>;
+    public sealed record Failure(Exception Exception) : Result<T>;
 
     public static implicit operator Result<T>(T value)
         => new Success(value);
 
     public static implicit operator Result<T>(Exception ex)
-        => new ExceptionalFailure(ex);
+        => new Failure(ex);
 
     public static implicit operator bool(Result<T> result)
         => result is Success;
@@ -145,8 +147,8 @@ public abstract record Result<T>
         this switch
         {
             Success success => $"Success: {success.Value}",
-            Failure failure => $"Failure: {failure.Error}",
-            ExceptionalFailure exception => $"ExceptionFailure: {exception.Exception.Message}",
+            Error error => $"Error: {error}",
+            Failure exception => $"Failure: {exception.Exception.Message}",
             _ => "Unknown Result"
         };
 }
