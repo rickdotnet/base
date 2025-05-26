@@ -1,42 +1,42 @@
 ﻿namespace RickDotNet.Base;
 
-public struct VoidResult
+public struct Unit
 {
-    public static readonly VoidResult Default = new();
+    public static readonly Unit Default = new();
 }
 
 public static class Result
 {
-    public static Result<VoidResult> Success() => new Result<VoidResult>.Success(VoidResult.Default);
-    public static Result<VoidResult> Error(string error) => new Result<VoidResult>.Error(error);
-    public static Result<VoidResult> Failure(Exception failure) => new Result<VoidResult>.Failure(failure);
+    public static Result<Unit> Success() => new Result<Unit>.Success(Unit.Default);
+    public static Result<Unit> Error(string error) => new Result<Unit>.Error(error);
+    public static Result<Unit> Failure(Exception failure) => new Result<Unit>.Failure(failure);
     public static Result<T> Success<T>(T value) => new Result<T>.Success(value);
     public static Result<T> Error<T>(string errorMessage) => new Result<T>.Error(errorMessage);
     public static Result<T> Error<T>(Exception failure) => new Result<T>.Error(failure.Message);
     public static Result<T> Failure<T>(Exception failure) => new Result<T>.Failure(failure);
 
-    public static Result<VoidResult> Try(Action action)
+    public static Result<Unit> Try(Action action)
     {
         try
         {
             action();
-            return Success(VoidResult.Default);
+            return Success(Unit.Default);
         }
         catch (Exception e)
         {
-            return Failure<VoidResult>(e);
+            return Failure<Unit>(e);
         }
     }
-    public static async Task<Result<VoidResult>> TryAsync(Func<Task> func)
+    public static async Task<Result<Unit>> TryAsync(Func<Task> func)
     {
         try
         {
             await func();
-            return Success(VoidResult.Default);
+            return Success(Unit.Default);
         }
         catch (Exception e)
         {
-            return Failure<VoidResult>(e);
+            return Failure<Unit>(e);
         }
     }
     
