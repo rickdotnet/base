@@ -7,10 +7,15 @@ public struct Unit
 
 public static class Result
 {
-    public static Result<Unit> Success() => new Result<Unit>.Success(Unit.Default);
+    private static readonly Result<Unit> success = new Result<Unit>.Success(Unit.Default);
+    private static readonly Task<Result<Unit>> successTask = Task.FromResult(success);
+    
+    public static Result<Unit> Success() => success;
+    public static Task<Result<Unit>> SuccessTask() => successTask;
     public static Result<Unit> Error(string error) => new Result<Unit>.Error(error);
     public static Result<Unit> Failure(Exception failure) => new Result<Unit>.Failure(failure);
     public static Result<T> Success<T>(T value) => new Result<T>.Success(value);
+    public static Task<Result<T>> SuccessTask<T>(T value) => Task.FromResult(Success(value));
     public static Result<T> Error<T>(string errorMessage) => new Result<T>.Error(errorMessage);
     public static Result<T> Error<T>(Exception failure) => new Result<T>.Error(failure.Message);
     public static Result<T> Failure<T>(Exception failure) => new Result<T>.Failure(failure);
@@ -20,7 +25,7 @@ public static class Result
         try
         {
             action();
-            return Success(Unit.Default);
+            return Success();
         }
         catch (Exception e)
         {
@@ -32,7 +37,7 @@ public static class Result
         try
         {
             await func();
-            return Success(Unit.Default);
+            return Success();
         }
         catch (Exception e)
         {

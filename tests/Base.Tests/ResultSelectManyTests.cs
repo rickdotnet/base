@@ -50,7 +50,7 @@ public class ResultSelectManyTests
         Assert.False(chainedResult);
         Assert.Equal(exception.Message, ((Result<int>.Failure)chainedResult).Exception.Message);
     }
-    
+
     public class ResultSelectManyAsyncTests
     {
         [Fact]
@@ -68,11 +68,14 @@ public class ResultSelectManyTests
             var exception = new Exception("Failure");
             var result = Task.FromResult(Result.Failure<int>(exception));
             var wasCalled = false;
-            var chainedResult = await result.SelectManyAsync<int, int>(async x => { wasCalled = true; return Result.Success(x * 2); });
+            var chainedResult = await result.SelectManyAsync(x =>
+            {
+                wasCalled = true;
+                return Task.FromResult(Result.Success(x * 2));
+            });
             Assert.False(chainedResult);
             Assert.False(wasCalled);
             Assert.Equal(exception.Message, ((Result<int>.Failure)chainedResult).Exception.Message);
         }
     }
 }
-

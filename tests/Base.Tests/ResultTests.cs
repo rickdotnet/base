@@ -43,12 +43,33 @@ public class ResultTests
     [Fact]
     public void OnSuccess_Success_ExecutesAction()
     {
-        var result = Result.Success(5);
+        const int value = 5;
+        var result = Result.Success(value);
         var executed = false;
 
         result.OnSuccess(_ => executed = true);
 
         Assert.True(executed);
+        Assert.Equal(value, result.ValueOrDefault());
+    }
+    
+    [Fact]
+    public async Task SuccessTask_ReturnsCompletedSuccessResult()
+    {
+        var task = Result.SuccessTask();
+        var result = await task;
+        Assert.True(result);
+    }
+
+    [Fact]
+    public async Task SuccessTask_ReturnsCompletedSuccessResultWithValue()
+    {
+        const int value = 5;
+        var task = Result.SuccessTask(value);
+        
+        var result = await task;
+        
+        Assert.Equal(value, result.ValueOrDefault());
     }
 
     [Fact]
@@ -113,4 +134,6 @@ public class ResultTests
         
         Assert.Equal(10, result);
     }
+
+
 }
