@@ -87,7 +87,7 @@ public static class ResultExtensions
     /// <typeparam name="T">The type of the original result.</typeparam>
     /// <typeparam name="TResult">The type of the new result.</typeparam>
     /// <returns>The mapped result.</returns>
-    public static Result<TResult> SelectMany<T, TResult>(this Result<T> result, Func<T, Result<TResult>> onSuccess)
+    public static Result<TResult> Bind<T, TResult>(this Result<T> result, Func<T, Result<TResult>> onSuccess)
     {
         var tryResult = Result.Try(() =>
         {
@@ -111,7 +111,7 @@ public static class ResultExtensions
     /// <typeparam name="T">The type of the original result.</typeparam>
     /// <typeparam name="TResult">The type of the new result.</typeparam>
     /// <returns>A task representing the mapped result.</returns>
-    public static async Task<Result<TResult>> SelectManyAsync<T, TResult>(this Result<T> result, Func<T, Task<Result<TResult>>> onSuccess)
+    public static async Task<Result<TResult>> BindAsync<T, TResult>(this Result<T> result, Func<T, Task<Result<TResult>>> onSuccess)
     {
         var tryResult = await Result.TryAsync(async () =>
         {
@@ -135,7 +135,7 @@ public static class ResultExtensions
     /// <typeparam name="T">The type of the original result.</typeparam>
     /// <typeparam name="TResult">The type of the new result.</typeparam>
     /// <returns>A task representing the mapped result.</returns>
-    public static async Task<Result<TResult>> SelectManyAsync<T, TResult>(this Task<Result<T>> task, Func<T, Task<Result<TResult>>> onSuccess)
+    public static async Task<Result<TResult>> BindAsync<T, TResult>(this Task<Result<T>> task, Func<T, Task<Result<TResult>>> onSuccess)
     {
         var tryResult = await Result.TryAsync(async () =>
         {
