@@ -29,9 +29,23 @@ public static class Result
         }
         catch (Exception e)
         {
-            return Failure<Unit>(e);
+            return Failure(e);
         }
     }
+    
+    public static Result<Unit> Try(Action action, string errorMessage)
+    {
+        try
+        {
+            action();
+            return Success();
+        }
+        catch
+        {
+            return Error(errorMessage);
+        }
+    }
+    
     public static async Task<Result<Unit>> TryAsync(Func<Task> func)
     {
         try
@@ -41,9 +55,23 @@ public static class Result
         }
         catch (Exception e)
         {
-            return Failure<Unit>(e);
+            return Failure(e);
         }
     }
+    
+    public static async Task<Result<Unit>> TryAsync(Func<Task> func, string errorMessage)
+    {
+        try
+        {
+            await func();
+            return Success();
+        }
+        catch
+        {
+            return Error(errorMessage);
+        }
+    }
+   
     
     public static Result<T> Try<T>(Func<T> func)
     {
@@ -56,8 +84,20 @@ public static class Result
             return Failure<T>(e);
         }
     }
-
-   public static async Task<Result<T>> TryAsync<T>(Func<Task<T>> func)
+    
+    public static Result<T> Try<T>(Func<T> func, string errorMessage)
+    {
+        try
+        {
+            return Success(func());
+        }
+        catch
+        {
+            return Error<T>(errorMessage);
+        }
+    }
+    
+    public static async Task<Result<T>> TryAsync<T>(Func<Task<T>> func)
     {
         try
         {
@@ -66,6 +106,42 @@ public static class Result
         catch (Exception e)
         {
             return Failure<T>(e);
+        }
+    }
+   
+    public static async Task<Result<T>> TryAsync<T>(Func<Task<T>> func, string errorMessage)
+    {
+        try
+        {
+            return Success(await func());
+        }
+        catch
+        {
+            return Error<T>(errorMessage);
+        }
+    }
+    
+    public static Result<T> Try<T>(Func<Result<T>> func)
+    {
+        try
+        {
+            return func();
+        }
+        catch (Exception e)
+        {
+            return Failure<T>(e);
+        }
+    }
+    
+    public static Result<T> Try<T>(Func<Result<T>> func, string errorMessage)
+    {
+        try
+        {
+            return func();
+        }
+        catch
+        {
+            return Error<T>(errorMessage);
         }
     }
 
@@ -80,44 +156,7 @@ public static class Result
             return Failure<T>(e);
         }
     }
-
-    public static Result<T> Try<T>(Func<Result<T>> func)
-    {
-        try
-        {
-            return func();
-        }
-        catch (Exception e)
-        {
-            return Failure<T>(e);
-        }
-    }
-
-    public static Result<T> Try<T>(Func<Result<T>> func, Action<Exception> onCatch)
-    {
-        try
-        {
-            return func();
-        }
-        catch (Exception e)
-        {
-            onCatch(e);
-            return Failure<T>(e);
-        }
-    }
-
-    public static Result<T> Try<T>(Func<Result<T>> func, string errorMessage)
-    {
-        try
-        {
-            return func();
-        }
-        catch
-        {
-            return Error<T>(errorMessage);
-        }
-    }
-
+    
     public static async Task<Result<T>> TryAsync<T>(Func<Task<Result<T>>> func, string errorMessage)
     {
         try
