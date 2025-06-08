@@ -52,7 +52,7 @@ public class ResultTests
         Assert.True(executed);
         Assert.Equal(value, result.ValueOrDefault());
     }
-    
+
     [Fact]
     public async Task SuccessTask_ReturnsCompletedSuccessResult()
     {
@@ -66,9 +66,9 @@ public class ResultTests
     {
         const int value = 5;
         var task = Result.SuccessTask(value);
-        
+
         var result = await task;
-        
+
         Assert.Equal(value, result.ValueOrDefault());
     }
 
@@ -131,9 +131,58 @@ public class ResultTests
         var exception = new Exception("Failure");
         var result = await ValueTask.FromResult(Result.Failure<int>(exception)
         ).ValueOrDefaultAsync(10);
-        
+
         Assert.Equal(10, result);
     }
 
+    [Fact]
+    public void Successful_Property_ReturnsTrueForSuccess()
+    {
+        var result = Result.Success(123);
+        Assert.True(result.Successful);
+        Assert.False(result.NotSuccessful);
+        Assert.False(result.BlewUp);
+    }
 
+    [Fact]
+    public void Successful_Property_ReturnsFalseForFailure()
+    {
+        var result = Result.Failure<int>(new Exception("fail"));
+        Assert.False(result.Successful);
+        Assert.True(result.NotSuccessful);
+        Assert.True(result.BlewUp);
+    }
+
+    [Fact]
+    public void NotSuccessful_And_BlewUp_AreFalse_ForSuccess()
+    {
+        var result = Result.Success("ok");
+        Assert.False(result.NotSuccessful);
+        Assert.False(result.BlewUp);
+    }
+
+    [Fact]
+    public void NotSuccessful_And_BlewUp_AreTrue_ForFailure()
+    {
+        var result = Result.Failure<string>(new Exception("fail"));
+        Assert.True(result.NotSuccessful);
+        Assert.True(result.BlewUp);
+    }
+
+    [Fact]
+    public void BlewUp_IsFalse_ForErrorResult()
+    {
+        const string error = "error";
+
+        var result = Result.Error(error);
+        var errorMessage = result switch
+        {
+            Result<Unit>.Error e => e.ErrorMessage,
+            _ => throw new ArgumentOutOfRangeException(nameof(result))
+        };
+        
+        Assert.False(result.BlewUp);
+        Assert.True(result.NotSuccessful);
+        Assert.Equal(error, errorMessage);
+    }
 }

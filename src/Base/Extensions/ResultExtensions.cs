@@ -330,37 +330,6 @@ public static class ResultExtensions
     }
 
     /// <summary>
-    /// Returns the value of the result if it is a <see cref="Result{T}.Success"/>, otherwise returns the specified default value.
-    /// </summary>
-    /// <param name="result">The result to check.</param>
-    /// <param name="defaultValue">The default value to return if the result is not a <see cref="Result{T}.Success"/>.</param>
-    /// <typeparam name="T">The type of the result value.</typeparam>
-    /// <returns>The result value if successful, otherwise the <paramref name="defaultValue"/>.</returns>
-    public static T ValueOrDefault<T>(this Result<T> result, T defaultValue)
-    {
-        return result switch
-        {
-            Result<T>.Success success => success.Value,
-            _ => defaultValue,
-        };
-    }
-    
-    /// <summary>
-    /// Returns the value of the result if it is a <see cref="Result{T}.Success"/>, otherwise returns the default value for the type.
-    /// </summary>
-    /// <param name="result">The result to check.</param>
-    /// <typeparam name="T">The type of the result value.</typeparam>
-    /// <returns>The result value if successful, otherwise the default value for <typeparamref name="T"/>.</returns>
-    public static T? ValueOrDefault<T>(this Result<T> result)
-    {
-        return result switch
-        {
-            Result<T>.Success success => success.Value,
-            _ => default,
-        };
-    }
-
-    /// <summary>
     /// Returns the value of the result from a task if it is a <see cref="Result{T}.Success"/>, otherwise returns the specified default value.
     /// </summary>
     /// <param name="resultTask">The task containing the result to check.</param>

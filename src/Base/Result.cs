@@ -172,6 +172,28 @@ public static class Result
 
 public abstract record Result<T>
 {
+    public bool Successful => this is Success;
+    public bool NotSuccessful => !Successful;
+    
+    /// <summary>
+    /// Tell Houston. The result is a <see cref="Result{T}.Failure"/>, aka, an exception occurred during the operation.
+    /// </summary>
+    public bool BlewUp => this is Failure; 
+    
+    /// <summary>
+    /// Returns the value of the result if it is a <see cref="Result{T}.Success"/>, otherwise returns the default value of type T.
+    /// </summary>
+    /// <returns>The result value if successful, otherwise the default value of type T.</returns>
+    public T? ValueOrDefault() => this is Success success ? success.Value : default;
+
+    /// <summary>
+    /// Returns the value of the result if it is a <see cref="Result{T}.Success"/>, otherwise returns the specified default value.
+    /// </summary>
+    /// <param name="defaultValue">The default value to return if the result is not a <see cref="Result{T}.Success"/>.</param>
+    /// <typeparam name="T">The type of the result value.</typeparam>
+    /// <returns>The result value if successful, otherwise the <paramref name="defaultValue"/>.</returns>
+    public T ValueOrDefault(T defaultValue) => this is Success success ? success.Value : defaultValue;
+    
     public sealed record Success(T Value) : Result<T>;
 
     public sealed record Error(string ErrorMessage) : Result<T>;
