@@ -180,7 +180,7 @@ public class ResultTests
             Result<Unit>.Error e => e.ErrorMessage,
             _ => throw new ArgumentOutOfRangeException(nameof(result))
         };
-        
+
         Assert.False(result.BlewUp);
         Assert.True(result.NotSuccessful);
         Assert.Equal(error, errorMessage);

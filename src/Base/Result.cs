@@ -9,7 +9,7 @@ public static class Result
 {
     private static readonly Result<Unit> success = new Result<Unit>.Success(Unit.Default);
     private static readonly Task<Result<Unit>> successTask = Task.FromResult(success);
-    
+
     public static Result<Unit> Success() => success;
     public static Task<Result<Unit>> SuccessTask() => successTask;
     public static Result<Unit> Error(string error) => new Result<Unit>.Error(error);
@@ -32,7 +32,7 @@ public static class Result
             return Failure(e);
         }
     }
-    
+
     public static Result<Unit> Try(Action action, string errorMessage)
     {
         try
@@ -45,7 +45,7 @@ public static class Result
             return Error(errorMessage);
         }
     }
-    
+
     public static async Task<Result<Unit>> TryAsync(Func<Task> func)
     {
         try
@@ -58,7 +58,7 @@ public static class Result
             return Failure(e);
         }
     }
-    
+
     public static async Task<Result<Unit>> TryAsync(Func<Task> func, string errorMessage)
     {
         try
@@ -71,8 +71,8 @@ public static class Result
             return Error(errorMessage);
         }
     }
-   
-    
+
+
     public static Result<T> Try<T>(Func<T> func)
     {
         try
@@ -84,7 +84,7 @@ public static class Result
             return Failure<T>(e);
         }
     }
-    
+
     public static Result<T> Try<T>(Func<T> func, string errorMessage)
     {
         try
@@ -96,7 +96,7 @@ public static class Result
             return Error<T>(errorMessage);
         }
     }
-    
+
     public static async Task<Result<T>> TryAsync<T>(Func<Task<T>> func)
     {
         try
@@ -108,7 +108,7 @@ public static class Result
             return Failure<T>(e);
         }
     }
-   
+
     public static async Task<Result<T>> TryAsync<T>(Func<Task<T>> func, string errorMessage)
     {
         try
@@ -120,7 +120,7 @@ public static class Result
             return Error<T>(errorMessage);
         }
     }
-    
+
     public static Result<T> Try<T>(Func<Result<T>> func)
     {
         try
@@ -132,7 +132,7 @@ public static class Result
             return Failure<T>(e);
         }
     }
-    
+
     public static Result<T> Try<T>(Func<Result<T>> func, string errorMessage)
     {
         try
@@ -156,7 +156,7 @@ public static class Result
             return Failure<T>(e);
         }
     }
-    
+
     public static async Task<Result<T>> TryAsync<T>(Func<Task<Result<T>>> func, string errorMessage)
     {
         try
@@ -174,12 +174,12 @@ public abstract record Result<T>
 {
     public bool Successful => this is Success;
     public bool NotSuccessful => !Successful;
-    
+
     /// <summary>
     /// Tell Houston. The result is a <see cref="Result{T}.Failure"/>, aka, an exception occurred during the operation.
     /// </summary>
-    public bool BlewUp => this is Failure; 
-    
+    public bool BlewUp => this is Failure;
+
     /// <summary>
     /// Returns the value of the result if it is a <see cref="Result{T}.Success"/>, otherwise returns the default value of type T.
     /// </summary>
@@ -193,7 +193,7 @@ public abstract record Result<T>
     /// <typeparam name="T">The type of the result value.</typeparam>
     /// <returns>The result value if successful, otherwise the <paramref name="defaultValue"/>.</returns>
     public T ValueOrDefault(T defaultValue) => this is Success success ? success.Value : defaultValue;
-    
+
     public sealed record Success(T Value) : Result<T>;
 
     public sealed record Error(string ErrorMessage) : Result<T>;

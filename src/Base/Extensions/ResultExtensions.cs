@@ -52,7 +52,7 @@ public static class ResultExtensions
 
         return tryResult;
     }
-    
+
     /// <summary>
     /// Maps the result of a task to a new result type asynchronously.
     /// </summary>
@@ -126,7 +126,7 @@ public static class ResultExtensions
 
         return tryResult;
     }
-    
+
     /// <summary>
     /// Maps the result of a task to a new result type using a function that returns a <see cref="Task{Result{TResult}}"/>.
     /// </summary>
@@ -345,7 +345,7 @@ public static class ResultExtensions
             _ => defaultValue,
         };
     }
-    
+
     /// <summary>
     /// Returns the value of the result from a task if it is a <see cref="Result{T}.Success"/>, otherwise returns the default value for the type.
     /// </summary>

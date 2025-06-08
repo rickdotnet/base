@@ -60,4 +60,3 @@ public class ResultSelectTests
         Assert.Equal(exception.Message, ((Result<bool>.Failure)transformedResult).Exception.Message);
     }
 }
-

@@ -21,12 +21,12 @@ public class ResultTryTests
         // Success case
         var result1 = Result.Try(() => "no-op");
         Assert.True(result1);
-        
+
         // Error case
         var result2 = Result.Try(() => throw new Exception("fail"));
         Assert.False(result2);
         Assert.Equal("fail", ((Result<Unit>.Failure)result2).Exception.Message);
-        
+
         // Error message overload
         var result3 = Result.Try(() => throw new Exception(), "error");
         Assert.False(result3);
@@ -40,12 +40,12 @@ public class ResultTryTests
         var result1 = Result.Try(() => Result.Success(42));
         Assert.True(result1);
         Assert.Equal(42, ((Result<int>.Success)result1).Value);
-        
+
         // Exception case
         var result2 = Result.Try(() => throw new Exception("fail"));
         Assert.False(result2);
         Assert.Equal("fail", ((Result<Unit>.Failure)result2).Exception.Message);
-        
+
         // Error message overload
         var result3 = Result.Try(() => throw new Exception(), "error");
         Assert.False(result3);
@@ -81,12 +81,12 @@ public class ResultTryTests
         // Success case
         var result1 = await Result.TryAsync(() => Task.CompletedTask);
         Assert.True(result1);
-        
+
         // Exception case
         var result2 = await Result.TryAsync(() => throw new Exception("fail"));
         Assert.False(result2);
         Assert.Equal("fail", ((Result<Unit>.Failure)result2).Exception.Message);
-        
+
         // Error message overload
         var result3 = await Result.TryAsync(() => throw new Exception(), "error");
         Assert.False(result3);
@@ -100,12 +100,12 @@ public class ResultTryTests
         var result1 = await Result.TryAsync(() => Task.FromResult(Result.Success(42)));
         Assert.True(result1);
         Assert.Equal(42, ((Result<int>.Success)result1).Value);
-        
+
         // Exception case
         var result2 = await Result.TryAsync<int>(() => throw new Exception("fail"));
         Assert.False(result2);
         Assert.Equal("fail", ((Result<int>.Failure)result2).Exception.Message);
-        
+
         // Error message overload
         var result3 = await Result.TryAsync<int>(() => throw new Exception(), "error");
         Assert.False(result3);
