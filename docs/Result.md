@@ -81,7 +81,7 @@ Result<TResult> SomeOperation<TResult>(int i)
 
 ## Async Support
 
-There are async versions of most methods. The unit tests are the best place to see examples.
+There are async versions of most methods. The [unit tests](/tests/Base.Tests/) are the best place to see examples.
 
 Example: `TryAsync` with `Task<Result<T>>` for async operations:
 
@@ -96,4 +96,3 @@ Task<int> SomeAsyncOperation()
 }
 ```
 
-See the unit tests for more examples.
