@@ -13,12 +13,15 @@ public static class Result
     public static Result<Unit> Success() => success;
     public static Task<Result<Unit>> SuccessTask() => successTask;
     public static Result<Unit> Error(string error) => new Result<Unit>.Error(error);
+    public static Task<Result<Unit>> ErrorTask(string error) => Task.FromResult(Error(error));
     public static Result<Unit> Failure(Exception failure) => new Result<Unit>.Failure(failure);
     public static Result<T> Success<T>(T value) => new Result<T>.Success(value);
     public static Task<Result<T>> SuccessTask<T>(T value) => Task.FromResult(Success(value));
     public static Result<T> Error<T>(string errorMessage) => new Result<T>.Error(errorMessage);
     public static Result<T> Error<T>(Exception failure) => new Result<T>.Error(failure.Message);
+    public static Task<Result<T>> ErrorTask<T>(string error) => Task.FromResult(Error<T>(error));
     public static Result<T> Failure<T>(Exception failure) => new Result<T>.Failure(failure);
+    public static Task<Result<T>> FailureTask<T>(Exception failure) => Task.FromResult(Failure<T>(failure));
 
     public static Result<Unit> Try(Action action)
     {
