@@ -15,7 +15,7 @@ public static class ResultExtensions
     /// <returns>The mapped result.</returns>
     public static Result<TResult> Select<T, TResult>(this Result<T> result, Func<T, TResult> onSuccess)
     {
-        var tryResult = Result.Try(() =>
+        return Result.Try(() =>
         {
             return result switch
             {
@@ -25,8 +25,6 @@ public static class ResultExtensions
                 _ => throw new InvalidOperationException("Unknown Result type."),
             };
         });
-
-        return tryResult;
     }
 
     /// <summary>
@@ -37,9 +35,9 @@ public static class ResultExtensions
     /// <typeparam name="T">The type of the original result.</typeparam>
     /// <typeparam name="TResult">The type of the new result.</typeparam>
     /// <returns>A task representing the mapped result.</returns>
-    public static async Task<Result<TResult>> SelectAsync<T, TResult>(this Result<T> result, Func<T, Task<TResult>> onSuccess)
+    public static Task<Result<TResult>> SelectAsync<T, TResult>(this Result<T> result, Func<T, Task<TResult>> onSuccess)
     {
-        var tryResult = await Result.TryAsync(async () =>
+        return Result.TryAsync(async () =>
         {
             return result switch
             {
@@ -49,8 +47,6 @@ public static class ResultExtensions
                 _ => throw new InvalidOperationException("Unknown Result type."),
             };
         });
-
-        return tryResult;
     }
 
     /// <summary>
@@ -61,9 +57,9 @@ public static class ResultExtensions
     /// <typeparam name="T">The type of the original result.</typeparam>
     /// <typeparam name="TResult">The type of the new result.</typeparam>
     /// <returns>A task representing the mapped result.</returns>
-    public static async Task<Result<TResult>> SelectAsync<T, TResult>(this Task<Result<T>> task, Func<T, Task<TResult>> onSuccess)
+    public static Task<Result<TResult>> SelectAsync<T, TResult>(this Task<Result<T>> task, Func<T, Task<TResult>> onSuccess)
     {
-        var tryResult = await Result.TryAsync(async () =>
+        return Result.TryAsync(async () =>
         {
             var result = await task;
 
@@ -75,8 +71,50 @@ public static class ResultExtensions
                 _ => throw new InvalidOperationException("Unknown Result type."),
             };
         });
+    }
+    
+    public static Result<T> Or<T>(this Result<T> result, Func<string, T> onError)
+    {
+        return Result.Try(() =>
+        {
+            return result switch
+            {
+                Result<T>.Success => result,
+                Result<T>.Error error => onError(error.ErrorMessage),
+                Result<T>.Failure failure => onError(failure.Exception.Message),
+                _ => throw new InvalidOperationException("Unknown Result type.")
+            };
+        });
+    }
 
-        return tryResult;
+    public static Task<Result<T>> OrAsync<T>(this Result<T> result, Func<string, T> onError)
+    {
+        return Result.TryAsync(() =>
+        {
+            return Task.FromResult(result switch
+            {
+                Result<T>.Success => result,
+                Result<T>.Error error => onError(error.ErrorMessage),
+                Result<T>.Failure failure => onError(failure.Exception.Message),
+                _ => throw new InvalidOperationException("Unknown Result type.")
+            });
+        });
+    }
+
+    public static Task<Result<T>> OrAsync<T>(this Task<Result<T>> task, Func<string, T> onError)
+    {
+        return Result.TryAsync(async () =>
+        {
+            var result = await task;
+
+            return result switch
+            {
+                Result<T>.Success => result,
+                Result<T>.Error error => onError(error.ErrorMessage),
+                Result<T>.Failure failure => onError(failure.Exception.Message),
+                _ => throw new InvalidOperationException("Unknown Result type.")
+            };
+        });
     }
 
     /// <summary>
@@ -89,7 +127,7 @@ public static class ResultExtensions
     /// <returns>The mapped result.</returns>
     public static Result<TResult> Bind<T, TResult>(this Result<T> result, Func<T, Result<TResult>> onSuccess)
     {
-        var tryResult = Result.Try(() =>
+        return Result.Try(() =>
         {
             return result switch
             {
@@ -99,8 +137,6 @@ public static class ResultExtensions
                 _ => throw new InvalidOperationException("Unknown Result type."),
             };
         });
-
-        return tryResult;
     }
 
     /// <summary>
@@ -111,9 +147,9 @@ public static class ResultExtensions
     /// <typeparam name="T">The type of the original result.</typeparam>
     /// <typeparam name="TResult">The type of the new result.</typeparam>
     /// <returns>A task representing the mapped result.</returns>
-    public static async Task<Result<TResult>> BindAsync<T, TResult>(this Result<T> result, Func<T, Task<Result<TResult>>> onSuccess)
+    public static Task<Result<TResult>> BindAsync<T, TResult>(this Result<T> result, Func<T, Task<Result<TResult>>> onSuccess)
     {
-        var tryResult = await Result.TryAsync(async () =>
+        return Result.TryAsync(async () =>
         {
             return result switch
             {
@@ -123,8 +159,6 @@ public static class ResultExtensions
                 _ => throw new InvalidOperationException("Unknown Result type."),
             };
         });
-
-        return tryResult;
     }
 
     /// <summary>
@@ -135,9 +169,9 @@ public static class ResultExtensions
     /// <typeparam name="T">The type of the original result.</typeparam>
     /// <typeparam name="TResult">The type of the new result.</typeparam>
     /// <returns>A task representing the mapped result.</returns>
-    public static async Task<Result<TResult>> BindAsync<T, TResult>(this Task<Result<T>> task, Func<T, Task<Result<TResult>>> onSuccess)
+    public static Task<Result<TResult>> BindAsync<T, TResult>(this Task<Result<T>> task, Func<T, Task<Result<TResult>>> onSuccess)
     {
-        var tryResult = await Result.TryAsync(async () =>
+        return Result.TryAsync(async () =>
         {
             var result = await task;
 
@@ -149,8 +183,6 @@ public static class ResultExtensions
                 _ => throw new InvalidOperationException("Unknown Result type."),
             };
         });
-
-        return tryResult;
     }
 
     /// <summary>
