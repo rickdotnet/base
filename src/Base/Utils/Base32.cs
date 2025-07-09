@@ -1,6 +1,8 @@
 // Lifted from NATS.NKeys project
 // https://github.com/nats-io/nkeys.net/blob/main/NATS.NKeys/Base32.cs
 
+using System.Security.Cryptography;
+
 namespace RickDotNet.Base.Utils;
 
 using System;
@@ -97,6 +99,25 @@ public static class Base32
         
         ToBase32(data, output);
         return output.ToString();
+    }
+    
+    public static string RandomBase32(int length)
+    {
+        if (length <= 0)
+            throw new ArgumentOutOfRangeException(nameof(length), "Length must be greater than zero.");
+        
+        // length param is for encoded length
+        // base32 is 5bits per char instead
+        // of 8bits per byte
+        var dataLength = length * 5 / 8;
+        byte[] randomBytes = new byte[dataLength];
+        RandomNumberGenerator.Fill(randomBytes);
+        
+        //var encodedLength = GetEncodedLength(dataLength);
+        var base32Chars = new char[length];
+        ToBase32(randomBytes, base32Chars);
+        
+        return new string(base32Chars);
     }
 
     /// <summary>
