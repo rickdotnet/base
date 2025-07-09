@@ -84,6 +84,20 @@ public static class Base32
 
         return outputIndex;
     }
+    
+    /// <summary>
+    /// Converts a byte array to a Base32-encoded string.
+    /// </summary>
+    /// <param name="data">The byte array to encode.</param>
+    /// <returns>A Base32-encoded string.</returns>
+    public static string ToBase32(ReadOnlySpan<byte> data)
+    {
+        var encodedLength = GetEncodedLength(data);
+        Span<char> output = stackalloc char[encodedLength];
+        
+        ToBase32(data, output);
+        return output.ToString();
+    }
 
     /// <summary>
     /// Calculates the length of the decoded data from a Base32-encoded string.
